@@ -160,6 +160,13 @@ pub const Parser = struct {
         }
 
         while (iter.peek()) |opt_name| {
+            // On POSIX systems "--" is the delimiter to indicate that
+            // we can stop trying to parse options.
+            if (mem.eql(u8, opt_name, "--")) {
+                iter.skip();
+                return;
+            }
+
             if (!isOption(opt_name)) return;
             iter.skip();
 
@@ -372,4 +379,33 @@ test "Parse command with args and options" {
     try tst.expectEqual(true, ctx.opts.get("verbose").?.boolean);
     try tst.expectEqual(12, ctx.args.get("a").?.int);
     try tst.expectEqual(42, ctx.args.get("b").?.int);
+}
+
+test "Stop option parsing on --" {
+    const app = App{
+        .name = "calc",
+        .root = .{
+            .handler = printHelloWorld,
+            .options = &.{
+                .{
+                    .name = "file",
+                    .short = "--file",
+                    .kind = .string,
+                },
+            },
+            .args = &.{
+                .{ .name = "file", .kind = .string },
+            },
+        },
+    };
+
+    var parser = try Parser.init(tst.allocator, app);
+    defer parser.deinit();
+
+    const args: []const [:0]const u8 = &.{ "cli", "--", "--file" };
+    const handler, const ctx = try parser.parse(args);
+
+    try tst.expectEqual(printHelloWorld, handler);
+    try tst.expectEqual(0, ctx.opts.count());
+    try tst.expectEqual("--file", ctx.args.get("file").?.string);
 }

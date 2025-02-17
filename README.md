@@ -2,9 +2,12 @@
 
 A Zig library for building command-line interfaces.
 
-* Parse options and boolean flags
-* Support for command parsing 
-* Positional arguments
+* Parse options
+  * Short `-s` and `long` names
+  * Stop parsing options when encountering "--" delimiter
+* Parse positional arguments
+* Support for arbitrary sub commands
+
 
 This library is under development.
 
@@ -14,4 +17,4 @@ TBD
 
 ## License
 
-[MIT](./LICENSE) 
+[MIT](./LICENSE)
