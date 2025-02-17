@@ -136,16 +136,17 @@ pub const Parser = struct {
 
     /// Parse subcommand.
     fn parseSubcommand(self: *Parser, cmds: []const Command, iter: *TokenIterator) ParseError!Command {
-        if (iter.next()) |tk| {
-            for (cmds) |cmd| {
-                if (mem.eql(u8, cmd.name, tk)) {
-                    return cmd;
-                }
+        const tk = iter.next() orelse {
+            return self.fail(error.CommandMissing, "Expected command.", .{});
+        };
+
+        for (cmds) |cmd| {
+            if (mem.eql(u8, cmd.name, tk)) {
+                return cmd;
             }
-            return self.fail(error.CommandUnknown, "Unknown command \"{s}\".", .{tk});
         }
 
-        return self.fail(error.CommandMissing, "Expected command.", .{});
+        return self.fail(error.CommandUnknown, "Unknown command \"{s}\".", .{tk});
     }
 
     /// Parse options and push them to context.
