@@ -1,4 +1,4 @@
-# Zig Cli
+# zcli
 
 A Zig library for building command-line interfaces.
 
