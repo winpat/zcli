@@ -159,12 +159,8 @@ pub const Parser = struct {
         }
 
         while (iter.peek()) |opt_name| {
-            // Only continue parsing if the next tokens is a option.
-            if (!isOption(opt_name)) {
-                return;
-            } else {
-                iter.skip();
-            }
+            if (!isOption(opt_name)) return;
+            iter.skip();
 
             const opt = for (opts) |opt| {
                 if (opt.match(opt_name)) break opt;
