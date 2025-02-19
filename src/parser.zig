@@ -9,6 +9,7 @@ const Option = @import("option.zig").Option;
 const Command = @import("command.zig").Command;
 const App = @import("app.zig").App;
 const HandlerFn = @import("command.zig").HandlerFn;
+const printHelp = @import("help.zig").printHelp;
 
 /// Iterator over process arguments.
 /// We call them tokens to avoid naming conflicts when parsing
@@ -64,6 +65,8 @@ const ParseError = error{
     OptionValueInvalid,
     /// Option value was not provided.
     OptionValueMissing,
+    /// Encountered --help or -h
+    Help,
     /// Argument was not expected.
     ArgUnknown,
     /// Argument is required but not provided.
@@ -112,11 +115,20 @@ pub const Parser = struct {
 
         var cmd = self.app.root;
         // TODO Refactor this so we don't have to do this outside of the loop.
+        try self.ctx.path.append(cmd);
         if (cmd.options) |opts| try self.parseOptions(opts, &iter);
 
         while (cmd.commands != null) {
-            if (cmd.commands) |cmds| cmd = try self.parseSubcommand(cmds, &iter);
-            if (cmd.options) |opts| try self.parseOptions(opts, &iter);
+            if (cmd.commands) |cmds| {
+                cmd = try self.parseSubcommand(cmds, &iter);
+                try self.ctx.path.append(cmd);
+            }
+            if (cmd.options) |opts| {
+                self.parseOptions(opts, &iter) catch |err| switch (err) {
+                    error.Help => return .{ printHelp, self.ctx },
+                    else => return err,
+                };
+            }
         }
 
         if (cmd.args) |args| {
@@ -160,6 +172,11 @@ pub const Parser = struct {
         }
 
         while (iter.peek()) |opt_name| {
+            // Halt parsing when user wants to see help.
+            if (mem.eql(u8, opt_name, "-h") or mem.eql(u8, opt_name, "--help")) {
+                return error.Help;
+            }
+
             // On POSIX systems "--" is the delimiter to indicate that
             // we can stop trying to parse options.
             if (mem.eql(u8, opt_name, "--")) {
@@ -213,7 +230,7 @@ pub const Parser = struct {
     }
 };
 
-fn printHelloWorld(ctx: *Context) void {
+fn printHelloWorld(ctx: *Context) !void {
     _ = ctx;
     std.debug.print("Hello World\n", .{});
 }

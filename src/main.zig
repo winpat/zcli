@@ -9,14 +9,21 @@ pub fn main() !void {
     var app = App{
         .name = "app",
         .root = .{
+            .options = &.{.{
+                .name = "test",
+                .kind = .int,
+            }},
             .commands = &.{
                 .{
                     .name = "do",
+                    .description = "Print hello world",
                     .handler = printHelloWorld,
                     .options = &.{
                         .{
                             .name = "verbose",
+                            .description = "Print more.",
                             .long = "--verbose",
+                            .short = "-v",
                             .kind = .boolean,
                             .flag = true,
                         },
@@ -28,7 +35,9 @@ pub fn main() !void {
                         .{
                             .name = "ratio",
                             .long = "--ratio",
+                            .short = "--short",
                             .kind = .float,
+                            .description = "Ratio of stuff",
                         },
                         .{
                             .name = "name",
@@ -43,6 +52,11 @@ pub fn main() !void {
                         },
                     },
                 },
+                .{
+                    .name = "verylongcommand",
+                    .handler = printHelloWorld,
+                    .description = "Long command",
+                },
             },
         },
     };
@@ -50,7 +64,7 @@ pub fn main() !void {
     try app.run(allocator);
 }
 
-fn printHelloWorld(ctx: *Context) void {
+fn printHelloWorld(ctx: *Context) !void {
     const name = ctx.args.get("file-id").?.int;
     std.debug.print("{any}\n", .{name});
 }

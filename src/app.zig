@@ -5,9 +5,12 @@ const Allocator = std.mem.Allocator;
 
 const Command = @import("command.zig").Command;
 const Parser = @import("parser.zig").Parser;
+const help = @import("help.zig");
 
 pub const App = struct {
     name: []const u8,
+    description: []const u8 = "",
+
     root: Command,
 
     pub fn run(self: App, allocator: Allocator) !void {
@@ -25,6 +28,6 @@ pub const App = struct {
             process.exit(1);
         };
 
-        handler(ctx);
+        try handler(ctx);
     }
 };
