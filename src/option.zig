@@ -4,6 +4,8 @@ const Kind = @import("value.zig").Kind;
 
 pub const Option = struct {
     name: []const u8,
+    description: []const u8 = "",
+
     kind: Kind,
 
     long: ?[]const u8 = null,
